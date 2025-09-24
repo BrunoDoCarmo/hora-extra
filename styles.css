@@ -1,0 +1,137 @@
+:root {
+    --primary: #3b82f6;      /* azul moderno */
+    --primary-dark: #1d4ed8;
+    --bg: #ffffff;          /* fundo bem claro */
+    --card: #b5b5b6;
+    --text: #111827;
+}
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 10px 0;
+}
+
+.container {
+    width: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card {
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    padding: 15px;
+}
+
+.teste {
+    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 5px;
+}
+.campo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+input {
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: #f9fafb;
+    transition: all 0.2s;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #1e3a8a);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+th, td {
+    padding: 14px;
+    text-align: center;
+    font-size: 0.95rem;
+    border: 1px solid #e5e7eb;
+}
+
+th {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+tr:nth-child(even) td {
+    background: #f9fafb;
+}
+
+.total {
+    margin-top: 20px;
+    font-weight: 600;
+    text-align: right;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+.totais {
+    position: fixed;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
