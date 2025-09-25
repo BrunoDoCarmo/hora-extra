@@ -131,7 +131,7 @@ button:hover {
     margin: 0;
     padding: 10px;
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     white-space: nowrap; /* evita quebrar o texto tipo “Dia da Semana” */
     border: 1px solid #000;
     border-bottom:0;

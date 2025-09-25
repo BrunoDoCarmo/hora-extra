@@ -63,6 +63,15 @@ const form = document.getElementById("form");
       return;
     }
 
+    // 🔎 Validação: horário deve ser maior que o último informado
+    if (jornadaDiaria.horarios.length > 0) {
+      const ultimo = jornadaDiaria.horarios[jornadaDiaria.horarios.length - 1];
+      if (diffMinutos(ultimo, horario) <= 0) {
+        alert("O horário deve ser maior que o último informado!");
+        return;
+      }
+    }
+
     jornadaDiaria.horarios.push(horario);
 
     salvarJornadaDiarias();
@@ -102,6 +111,7 @@ const form = document.getElementById("form");
         <p class="saida-final">${horarios[3] || ""}</p>
         <p class="horas-trabalhadas"></p>
         <p class="hora-extra"></p>
+        <p class="hora-devendo"></p>
     `;
     tabela.appendChild(linha);
 
@@ -109,64 +119,83 @@ const form = document.getElementById("form");
   }
 
 function calcularHoras(linha, horarios) {
-    const [entrada, saidaAlmoco, retorno, saidaFinal] = horarios;
+  let totalMin = 0;
 
-    if (entrada && retorno && saidaFinal) {
-      let totalMin = 0;
-
-      if (entrada && saidaAlmoco) totalMin += diffMinutos(entrada, saidaAlmoco);
-      if (retorno && saidaFinal) totalMin += diffMinutos(retorno, saidaFinal);
-
-      const horas = Math.floor(totalMin / 60);
-      const minutos = totalMin % 60;
-      linha.querySelector(".horas-trabalhadas").textContent = `${horas}h ${minutos}m`;
-
-      const ultimaCargaSalva = localStorage.getItem("ultimaCargaSalva");
-      if (cargaInput?.value || ultimaCargaSalva) {
-        const carga = parseInt(ultimaCargaSalva || cargaInput.value) * 60
-        const extraMin = totalMin - carga;
-        let extraTexto = "0h";
-
-        if (extraMin !== 0) {
-          const h = Math.floor(Math.abs(extraMin) / 60);
-          const m = Math.abs(extraMin) % 60;
-          extraTexto = `${extraMin < 0 ? "-" : "+"}${h}h ${m}m`;
-
-          if (extraMin > 0) {
-            totalPositiva += extraMin; // só soma positivos ao total
-          }
-            totalTrabalhadas += totalMin;
-
-          if (extraMin < 0) {
-            totalNegativa -= extraMin; // só soma negativos ao total
-          }
-        }
-
-        linha.querySelector(".hora-extra").textContent = extraTexto;
-      }
+  //Percorre os horarios de 2 em 2 (entrada e saida)
+  for (let i = 0; i < horarios.length; i += 2) {
+    const entrada = horarios[i];
+    const saida = horarios[i + 1];
+    if (entrada && saida) {
+      totalMin += diffMinutos(entrada, saida);
     }
+  }
+  
+  //Mostra o total de horas trabalhadas na linha
+  linha.querySelector(".horas-trabalhadas").textContent = formatarTempo(totalMin);
+  
+  //Verifica carga horaria e calcula horas extras
+  const ultimaCargaSalva = localStorage.getItem("ultimaCargaSalva");
+  if (cargaInput?.value || ultimaCargaSalva) {
+    const carga = parseInt(ultimaCargaSalva || cargaInput.value) * 60
+    const extraMin = totalMin - carga;
+    let horaExtraTexto = "";
+    let horaDevendoTexto = "";
+
+    if (extraMin > 0) {
+      horaExtraTexto = `+${formatarTempo(extraMin)}`;
+      totalPositiva += extraMin; // só soma positivos ao total
+    } else if (extraMin < 0) {
+      horaDevendoTexto = `-${formatarTempo(Math.abs(extraMin))}`;
+      totalNegativa += Math.abs(extraMin); // só soma negativos ao total
+    }
+    //Atualiza colunas da tabela
+    linha.querySelector(".hora-extra").textContent = horaExtraTexto;
+    linha.querySelector(".hora-devendo").textContent = horaDevendoTexto;
+  }
+  totalTrabalhadas += totalMin;
 }
 
-  function diffMinutos(hora1, hora2) {
-    const [h1, m1] = hora1.split(":").map(Number);
-    const [h2, m2] = hora2.split(":").map(Number);
-    return (h2 * 60 + m2) - (h1 * 60 + m1);
+function diffMinutos(hora1, hora2) {
+  const [h1, m1] = hora1.split(":").map(Number);
+  const [h2, m2] = hora2.split(":").map(Number);
+
+  const minuto1 = h1 * 60 + m1;
+  const minuto2 = h2 * 60 + m2;
+
+  return minuto2 - minuto1;
+}
+
+function formatarTempo(minutosTotais) {
+  const h = Math.floor(Math.abs(minutosTotais) / 60);
+  const m = Math.abs(minutosTotais) % 60;
+
+  if (h && m) return `${h}h ${m}m`;
+  if (h) return `${h}h`;
+  return `${m}m`;
+}
+
+function atualizarTotal() {
+  const h = Math.floor(totalPositiva / 60);
+  const m = totalPositiva % 60;
+  const totalHorasSemana = h + (m > 0 ? 1 : 0); // arredonda pra cima se tiver minutos
+
+  if (totalHorasSemana >= 44) {
+    console.log(`✅ Jornada semanal atingida: ${formatarTempo(totalTrabalhadas)} (>= 44h)`);
+  } else {
+    console.log(`⚠️ Jornada semanal incompleta: ${formatarTempo(totalTrabalhadas)} (< 44h)`);
   }
 
-  function atualizarTotal() {
-    const h = Math.floor(totalPositiva / 60);
-    const m = totalPositiva % 60;
-    totalHoraPositiva.textContent = `Total de Horas Positiva: ${h}h ${m}m`;
+  totalHoraPositiva.textContent = `Total de Horas Positiva: ${h}h ${m}m`;
 
-    const j = Math.floor(totalNegativa / 60);
-    const n = totalNegativa % 60;
-    totalHoraNegativa.textContent = `Total de Horas Negativa: ${j}h ${n}m`;
+  const j = Math.floor(totalNegativa / 60);
+  const n = totalNegativa % 60;
+  totalHoraNegativa.textContent = `Total de Horas Negativa: ${j}h ${n}m`;
 
-    const g = Math.floor(totalTrabalhadas / 60);
-    const t = totalTrabalhadas % 60;
-    totalHoraTrabalhadas.textContent = `Total de Horas Trabalhadas: ${g}h ${t}m`;
-  }
+  const g = Math.floor(totalTrabalhadas / 60);
+  const t = totalTrabalhadas % 60;
+  totalHoraTrabalhadas.textContent = `Total de Horas Trabalhadas: ${g}h ${t}m`;
+}
 
-  function salvarJornadaDiarias() {
-    localStorage.setItem("jornadaDiarias", JSON.stringify(jornadaDiarias));
-  }
+function salvarJornadaDiarias() {
+  localStorage.setItem("jornadaDiarias", JSON.stringify(jornadaDiarias));
+}
