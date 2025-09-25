@@ -1,21 +1,29 @@
-  const form = document.getElementById("form");
+const form = document.getElementById("form");
   const tabela = document.querySelector("#tabela tbody");
   const dataInput = document.getElementById("data");
   const horarioInput = document.getElementById("horario");
   const cargaInput = document.getElementById("cargaHoraria");
-  const totalGeralEl = document.getElementById("totalGeral");
+  const totalGeralEl = document.getElementById("totalExtra");
 
   let totalExtras = 0;
-  let registros = JSON.parse(localStorage.getItem("registros")) || [];
+  let jornadaDiarias = JSON.parse(localStorage.getItem("jornadaDiarias")) || [];
+  let cargaHorarias = JSON.parse(localStorage.getItem("cargaHorarias")) || [];
 
   // Preenche a data de hoje automaticamente
   const hoje = new Date();
   dataInput.value = hoje.toISOString().split("T")[0];
 
-  // Carregar registros salvos
+  // Se já houver carga horária salva → preencher o input
+  const ultimaCargaSalva = localStorage.getItem("ultimaCargaSalva");
+  if (ultimaCargaSalva) {
+    cargaInput.value = ultimaCargaSalva;
+  }
+
+  // Carregar registros salvos ao abrir
   window.addEventListener("DOMContentLoaded", () => {
-    registros.forEach(r => montarLinha(r.data, r.horarios));
+    jornadaDiarias.forEach(r => montarLinha(r.data, r.horarios));
     atualizarTotal();
+
   });
 
   form.addEventListener("submit", (e) => {
@@ -23,33 +31,45 @@
 
     const data = dataInput.value;
     const horario = horarioInput.value;
+    const carga = cargaInput.value;
 
     if (!data || !horario) return;
 
-    // Busca ou cria registro
-    let registro = registros.find(r => r.data === data);
-    if (!registro) {
-      registro = { data, horarios: [] };
-      registros.push(registro);
+    // Salva carga horária
+    if (carga && !cargaHorarias.includes(carga)) {
+      cargaHorarias.push(carga);
+      cargaHorarias.sort((a, b) => a - b);
     }
 
-    if (registro.horarios.length >= 4) {
+    if (carga) {
+      localStorage.setItem("ultimaCargaSalva", carga);
+    }
+
+    // Busca ou cria jornadaDiaria
+    let jornadaDiaria = jornadaDiarias.find(r => r.data === data);
+    if (!jornadaDiaria) {
+      jornadaDiaria = { data, horarios: [] };
+      jornadaDiarias.push(jornadaDiaria);
+    }
+
+    if (jornadaDiaria.horarios.length >= 4) {
       alert("Já foram registrados 4 horários para esta data!");
       return;
     }
 
-    registro.horarios.push(horario);
+    jornadaDiaria.horarios.push(horario);
 
-    salvarRegistros();
+    salvarJornadaDiarias();
     montarTabela();
     horarioInput.value = "";
+
   });
 
   function montarTabela() {
     tabela.innerHTML = "";
     totalExtras = 0;
 
-    registros.forEach(r => {
+    jornadaDiarias.forEach(r => {
       montarLinha(r.data, r.horarios);
     });
 
@@ -100,16 +120,23 @@
       const minutos = totalMin % 60;
       linha.querySelector(".horas-trabalhadas").textContent = `${horas}h ${minutos}m`;
 
-      if (cargaInput.value) {
-        const carga = Number(cargaInput.value) * 60;
+      const ultimaCargaSalva = localStorage.getItem("ultimaCargaSalva");
+      if (cargaInput.value || ultimaCargaSalva) {
+        const carga = (ultimaCargaSalva || cargaInput.value)
+          ? parseInt(ultimaCargaSalva || cargaInput.value) * 60
+          : 0;
+
         const extraMin = totalMin - carga;
         let extraTexto = "0h";
 
-        if (extraMin > 0) {
-          const h = Math.floor(extraMin / 60);
-          const m = extraMin % 60;
-          extraTexto = `${h}h ${m}m`;
-          totalExtras += extraMin;
+        if (extraMin !== 0) {
+          const h = Math.floor(Math.abs(extraMin) / 60);
+          const m = Math.abs(extraMin) % 60;
+          extraTexto = `${extraMin < 0 ? "-" : "+"}${h}h ${m}m`;
+
+          if (extraMin > 0) {
+            totalExtras += extraMin; // só soma positivos ao total
+          }
         }
 
         linha.querySelector(".hora-extra").textContent = extraTexto;
@@ -129,6 +156,6 @@
     totalGeralEl.textContent = `Total de Horas Extras: ${h}h ${m}m`;
   }
 
-  function salvarRegistros() {
-    localStorage.setItem("registros", JSON.stringify(registros));
+  function salvarJornadaDiarias() {
+    localStorage.setItem("jornadaDiarias", JSON.stringify(jornadaDiarias));
   }
