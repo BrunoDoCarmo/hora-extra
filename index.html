@@ -19,16 +19,16 @@
                             </div>
                         </div>
                         <div class="campo">
-                            <label>Data</label>
-                            <input type="date" id="data">
-                        </div>
-                        <div class="campo">
                             <label>Horario</label>
                             <input type="time" id="horario" required>
                         </div>
                     </div>
                     <button type="submit">Adicionar</button>
                 </form>
+            </div>
+            <div style="display: flex; gap: 15px; width: 100%;">
+                <button id="exportarJson">Exportar para JSON</button>
+                <button id="exportarPdf">Exportar para PDF</button>
             </div>
             <div id="tabela">
                 <div class="cabecario-tabela">
@@ -51,5 +51,7 @@
             </div>
         </div>
         <script src="js.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     </body>
 </html>
